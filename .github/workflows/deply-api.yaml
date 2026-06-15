@@ -20,8 +20,7 @@ required: true
 type: string
 k3s-server-public-ip:
 description: >
-IP pública del servidor K3S. En el repo cliente suele guardarse como variable
-de repositorio (p. ej. K3S_SERVER_PUBLIC_IP) y pasarse en el bloque with del uses.
+#IP pública del servidor K3S. En el repo cliente suele guardarse como variable de repositorio (p. ej. K3S_SERVER_PUBLIC_IP) y pasarse en el bloque with del uses.
 required: true
 type: string
 secrets:
