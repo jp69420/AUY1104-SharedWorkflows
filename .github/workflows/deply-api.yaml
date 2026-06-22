@@ -50,7 +50,7 @@ jobs:
         run: npm install
 
       - name: 3 · Ejecutar tests
-        run: npm test
+        run: exit 1
 
   build-and-push:
     name: Build and push Docker image
