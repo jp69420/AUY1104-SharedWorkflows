@@ -1,7 +1,3 @@
-# ─────────────────────────────────────────────────────────────
-# Receta compartida: tests → build Docker → deploy a k3s con rollout status y rollback automático
-# SharedWorkflows/AUY1104-SharedWorkflows → .github/workflows/deploy-api.yaml
-# ─────────────────────────────────────────────────────────────
 name: Subir la API a Docker Hub (receta reutilizable)
 
 on:
@@ -42,10 +38,6 @@ on:
         required: true
         type: string
 
-# ─────────────────────────────────────────────────────────────
-# JOB 1: Tests
-# Para provocar fallo I3: cambiar "npm test" por "exit 1" o romper un test
-# ─────────────────────────────────────────────────────────────
 jobs:
   deps-and-test:
     name: Dependencies and tests
@@ -60,10 +52,6 @@ jobs:
       - name: 3 · Ejecutar tests
         run: npm test
 
-# ─────────────────────────────────────────────────────────────
-# JOB 2: Build y Push Docker
-# Para provocar fallo I4: introducir error en Dockerfile o cambiar imagen base a una inexistente
-# ─────────────────────────────────────────────────────────────
   build-and-push:
     name: Build and push Docker image
     needs: deps-and-test
@@ -72,8 +60,8 @@ jobs:
       - name: 1 · Descargar el código del repositorio
         uses: actions/checkout@v4
 
-      - - name: 2 · Iniciar sesión en Docker Hub
-          run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: 2 · Iniciar sesión en Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: 3 · Armar la imagen y publicarla
         run: |
@@ -84,9 +72,6 @@ jobs:
             .
           docker push --all-tags "${IMAGEN_COMPLETA}"
 
-# ─────────────────────────────────────────────────────────────
-# JOB 3: Deploy a k3s con rollout status y rollback automático (I2 + I5)
-# ─────────────────────────────────────────────────────────────
   deploy-to-k8s:
     name: Deploy to AWS K3S
     needs: build-and-push
@@ -112,7 +97,6 @@ jobs:
           scp -o StrictHostKeyChecking=accept-new -r k8s \
             "ubuntu@${{ inputs.k3s-server-public-ip }}:/tmp/k8s-deploy"
 
-      # ── PASO CLAVE I2: deploy + rollout status con timeout ──
       - name: 5 · Deploy to k3s
         id: deploy
         run: |
@@ -120,7 +104,6 @@ jobs:
             "sudo k3s kubectl apply -f /tmp/k8s-deploy/ && \
              sudo k3s kubectl rollout status deployment/demo-api --timeout=60s"
 
-      # ── PASO CLAVE I2: rollback automático solo si el paso anterior falla ──
       - name: 6 · Rollback automático
         if: failure()
         run: |
