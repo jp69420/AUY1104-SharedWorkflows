@@ -1,0 +1,40 @@
+name: Reusable Deploy Template
+
+on:
+  workflow_call:
+    inputs:
+      image_tag:
+        required: true
+        type: string
+        description: "Etiqueta de la nueva imagen (commit SHA)"
+      target_color:
+        required: true
+        type: string
+        description: "Color del nuevo entorno (blue o green)"
+    secrets:
+      KUBE_CONFIG:
+        required: true
+        description: "Credenciales de acceso al clúster K3s"
+
+jobs:
+  deploy-manifests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Inyectar variables dinámicas en el manifiesto
+        run: |
+          # Reemplazamos las variables preparadas para la estrategia Blue-Green
+          sed -i "s/\${COLOR}/${{ inputs.target_color }}/g" k8s/deployment.yaml
+          sed -i "s/\${IMAGE_TAG}/${{ inputs.image_tag }}/g" k8s/deployment.yaml
+
+      - name: Configurar acceso a Kubernetes
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+      - name: Aplicar nuevo Deployment en K3s
+        run: |
+          kubectl apply -f k8s/deployment.yaml
