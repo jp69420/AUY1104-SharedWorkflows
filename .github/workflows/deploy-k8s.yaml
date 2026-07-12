@@ -36,5 +36,4 @@ jobs:
           kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
       - name: Aplicar nuevo Deployment en K3s
-        run: |
-          kubectl apply -f k8s/deployment.yaml
+        run: kubectl apply -f k8s/deployment.yaml --insecure-skip-tls-verify --validate=false
